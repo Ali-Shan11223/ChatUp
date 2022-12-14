@@ -57,60 +57,6 @@ class ProfileScreen extends StatelessWidget {
                 ]),
               ),
               verticalSpace(20),
-              const Text(
-                'Jennifer',
-                style: TextStyle(fontSize: 22),
-              ),
-              verticalSpace(20),
-              ListTile(
-                onTap: () {
-                  Get.to(() => const AccountDetails());
-                },
-                leading: const Icon(
-                  Icons.person,
-                  color: colorBlue,
-                ),
-                title: Text(
-                  'Account Details',
-                  style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
-                ),
-              ),
-              const Divider(
-                height: 0,
-                indent: 16,
-                endIndent: 16,
-              ),
-              ListTile(
-                onTap: () {
-                  Get.to(() => const SettingsScreen());
-                },
-                leading: Icon(
-                  Icons.settings,
-                  color: Colors.grey.shade700,
-                ),
-                title: Text(
-                  'Settings',
-                  style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
-                ),
-              ),
-              const Divider(
-                height: 0,
-                indent: 16,
-                endIndent: 16,
-              ),
-              ListTile(
-                onTap: () {
-                  Get.to(() => const ContactUsScreen());
-                },
-                leading: const Icon(
-                  Icons.phone,
-                  color: Colors.green,
-                ),
-                title: Text(
-                  'Contact Us',
-                  style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
-                ),
-              ),
               verticalSpace(30),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
