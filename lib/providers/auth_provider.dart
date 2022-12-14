@@ -1,5 +1,5 @@
 import 'package:chat_up/consts/firestore_constants.dart';
-import 'package:chat_up/models/user_chat.dart';
+import 'package:chat_up/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -93,7 +93,7 @@ class AuthProvider extends ChangeNotifier {
         } else {
           // Already sign up, just get data from firestore
           DocumentSnapshot documentSnapshot = documents[0];
-          UserChat userChat = UserChat.fromDocument(documentSnapshot);
+          UserModel userChat = UserModel.fromDocument(documentSnapshot);
           // Write data to local
           await prefs.setString(FirestoreConstants.id, userChat.id);
           await prefs.setString(FirestoreConstants.nickName, userChat.nickName);

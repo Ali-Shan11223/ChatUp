@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:chat_up/consts/consts.dart';
 import 'package:chat_up/consts/firestore_constants.dart';
-import 'package:chat_up/models/user_chat.dart';
+import 'package:chat_up/models/user_model.dart';
 import 'package:chat_up/providers/auth_provider.dart';
 import 'package:chat_up/providers/home_provider.dart';
 import 'package:chat_up/screens/login_screen.dart';
@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget showUsers(BuildContext context, DocumentSnapshot? document) {
     if (document != null) {
-      UserChat userChat = UserChat.fromDocument(document);
+      UserModel userChat = UserModel.fromDocument(document);
       if (userChat.id == currentUserId) {
         return const SizedBox.shrink();
       } else {
