@@ -11,6 +11,7 @@ import 'package:chat_up/utilities/debouncer.dart';
 import 'package:chat_up/widgets/exit_popup.dart';
 import 'package:chat_up/widgets/loading_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,7 +25,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Debouncer searchDebouncer = Debouncer(milliSeconds: 300);
+  Debouncer searchDebouncer = Debouncer(milliseconds: 300);
   StreamController<bool> btnClearController = StreamController<bool>();
 
   late AuthProvider authProvider;
@@ -33,15 +34,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int limit = 20;
   int limitIncrement = 20;
-  String textSearch = '';
+  String _textSearch = '';
   bool isLoading = false;
 
   final searchController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
+  String? name;
+  String? picture;
+  String? email;
+
+  Future getData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    var getDocuments = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
+    setState(() {
+      name = getDocuments.data()!['nickname'];
+      email = getDocuments.data()!['emailaddress'];
+      picture = getDocuments.data()!['photourl'];
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    getData();
     authProvider = context.read<AuthProvider>();
     homeProvider = context.read<HomeProvider>();
 
@@ -59,6 +78,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     super.dispose();
     btnClearController.close();
+  }
+
+  void scrollListener() {
+    if (scrollController.offset >= scrollController.position.maxScrollExtent &&
+        !scrollController.position.outOfRange) {
+      setState(() {
+        limit += limitIncrement;
+      });
+    }
   }
 
   @override
@@ -81,7 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
         //   icon: const Icon(Icons.message_rounded),
         //   backgroundColor: colorBlue,
         // ),
-        drawer: const MyDrawer(),
+        drawer: MyDrawer(
+          userName: name,
+          userEmail: email,
+          userPicture: picture,
+        ),
         body: SizedBox(
           height: double.infinity,
           width: double.infinity,
@@ -98,16 +130,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             stream: homeProvider.getFirestoreStream(
                                 FirestoreConstants.userCollection,
                                 limit,
-                                textSearch),
+                                _textSearch),
                             builder: (context,
                                 AsyncSnapshot<QuerySnapshot> snapshot) {
                               if (snapshot.hasData) {
                                 if (snapshot.data!.docs.isNotEmpty) {
                                   return ListView.builder(
-                                      itemCount: snapshot.data!.docs.length,
-                                      itemBuilder: (context, index) =>
-                                          showUsers(context,
-                                              snapshot.data!.docs[index]));
+                                    itemCount: snapshot.data!.docs.length,
+                                    itemBuilder: (context, index) => showUsers(
+                                        context, snapshot.data!.docs[index]),
+                                    controller: scrollController,
+                                  );
                                 } else {
                                   return const Center(
                                     child: Text('No Users'),
@@ -157,13 +190,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   searchDebouncer.run(() {
                     btnClearController.add(true);
                     setState(() {
-                      textSearch = value;
+                      _textSearch = value;
                     });
                   });
                 } else {
                   btnClearController.add(false);
                   setState(() {
-                    textSearch = '';
+                    _textSearch = '';
                   });
                 }
               }),
@@ -190,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           searchController.clear();
                           btnClearController.add(false);
                           setState(() {
-                            textSearch = '';
+                            _textSearch = '';
                           });
                         },
                         child: const Icon(
@@ -200,7 +233,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       )
                     : const SizedBox.shrink();
-              })
+              }),
+          horizontalSpace(15)
         ],
       ),
       decoration: BoxDecoration(
@@ -210,8 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget showUsers(BuildContext context, DocumentSnapshot? document) {
     if (document != null) {
-      UserModel userChat = UserModel.fromDocument(document);
-      if (userChat.id == currentUserId) {
+      UserModel userModel = UserModel.fromDocument(document);
+      if (userModel.id == currentUserId) {
         return const SizedBox.shrink();
       } else {
         return ListTile(
@@ -222,12 +256,16 @@ class _HomeScreenState extends State<HomeScreen> {
           leading: CircleAvatar(
             radius: 30,
             backgroundColor: colorBlue,
-            child: userChat.photoUrl.isNotEmpty
-                ? ClipOval(
+            child: userModel.photoUrl.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(100),
                     child: Image.network(
-                      userChat.photoUrl,
+                      userModel.photoUrl,
+                      width: 120,
+                      height: 120,
                       fit: BoxFit.cover,
                     ),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
                   )
                 : const Icon(
                     Icons.account_circle_rounded,
@@ -235,11 +273,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           ),
           title: Text(
-            userChat.nickName,
+            userModel.nickName,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            'About Me: ${userChat.aboutMe}',
+            'About Me: ${userModel.aboutMe}',
             maxLines: 1,
           ),
         );

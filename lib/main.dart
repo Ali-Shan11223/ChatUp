@@ -1,5 +1,6 @@
 import 'package:chat_up/providers/auth_provider.dart';
 import 'package:chat_up/providers/home_provider.dart';
+import 'package:chat_up/providers/profile_provider.dart';
 import 'package:chat_up/screens/splash_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +47,12 @@ class MyApp extends StatelessWidget {
         Provider<HomeProvider>(
             create: (_) => HomeProvider(
                   firebaseFirestore: firebaseFirestore,
-                ))
+                )),
+        Provider<ProfileProvider>(
+            create: (_) => ProfileProvider(
+                prefs: prefs,
+                firebaseStorage: firebaseStorage,
+                firebaseFirestore: firebaseFirestore))
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

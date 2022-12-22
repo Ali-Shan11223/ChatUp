@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches
+
 import 'package:chat_up/consts/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -5,20 +7,19 @@ class UserModel {
   String id;
   String photoUrl;
   String nickName;
-  String emailAddress;
+  String? emailAddress;
   String aboutMe;
 
   UserModel(
       {required this.id,
       required this.photoUrl,
       required this.nickName,
-      required this.emailAddress,
+      this.emailAddress,
       required this.aboutMe});
 
   Map<String, String> toJson() {
     return {
       FirestoreConstants.nickName: nickName,
-      FirestoreConstants.emailAddress: emailAddress,
       FirestoreConstants.aboutMe: aboutMe,
       FirestoreConstants.photoUrl: photoUrl
     };

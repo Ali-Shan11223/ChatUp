@@ -1,9 +1,38 @@
 import 'package:chat_up/consts/consts.dart';
+import 'package:chat_up/consts/firestore_constants.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AccountDetails extends StatelessWidget {
+class AccountDetails extends StatefulWidget {
   const AccountDetails({Key? key}) : super(key: key);
+
+  @override
+  State<AccountDetails> createState() => _AccountDetailsState();
+}
+
+class _AccountDetailsState extends State<AccountDetails> {
+  String nickName = '';
+  String email = '';
+
+  getDetails() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    var getData = await FirebaseFirestore.instance
+        .collection(FirestoreConstants.userCollection)
+        .doc(user!.uid)
+        .get();
+    setState(() {
+      nickName = getData.data()!['nickname'];
+      email = getData.data()!['emailaddress'];
+    });
+  }
+
+  @override
+  void initState() {
+    getDetails();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +71,13 @@ class AccountDetails extends StatelessWidget {
                 elevation: 2,
                 child: Container(
                   color: colorWhite,
-                  child: const ListTile(
-                    leading: Text(
+                  child: ListTile(
+                    leading: const Text(
                       'Nick Name',
                       style: TextStyle(fontSize: 16),
                     ),
-                    trailing: Text('Ghost', style: TextStyle(fontSize: 16)),
+                    trailing:
+                        Text(nickName, style: const TextStyle(fontSize: 16)),
                   ),
                 ),
               ),
@@ -67,25 +97,14 @@ class AccountDetails extends StatelessWidget {
                 child: Container(
                   color: colorWhite,
                   child: Column(
-                    children: const [
+                    children: [
                       ListTile(
-                        leading: Text(
-                          'Name',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        trailing:
-                            Text('Jennifer', style: TextStyle(fontSize: 16)),
-                      ),
-                      Divider(
-                        height: 0,
-                      ),
-                      ListTile(
-                        leading: Text(
+                        leading: const Text(
                           'Email Address',
                           style: TextStyle(fontSize: 16),
                         ),
-                        trailing: Text('jennifer@gmail.com',
-                            style: TextStyle(fontSize: 16)),
+                        trailing:
+                            Text(email, style: const TextStyle(fontSize: 16)),
                       ),
                     ],
                   ),

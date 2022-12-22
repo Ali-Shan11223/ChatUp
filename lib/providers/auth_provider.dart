@@ -100,7 +100,7 @@ class AuthProvider extends ChangeNotifier {
           await prefs.setString(FirestoreConstants.photoUrl, userChat.photoUrl);
           await prefs.setString(FirestoreConstants.aboutMe, userChat.aboutMe);
           await prefs.setString(
-              FirestoreConstants.emailAddress, userChat.emailAddress);
+              FirestoreConstants.emailAddress, userChat.emailAddress!);
         }
         _status = Status.authenticated;
         notifyListeners();

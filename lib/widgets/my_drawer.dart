@@ -10,26 +10,38 @@ import '../consts/consts.dart';
 import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
 
-class MyDrawer extends StatelessWidget {
-  const MyDrawer({
-    Key? key,
-  }) : super(key: key);
+class MyDrawer extends StatefulWidget {
+  final String? userName;
+  final String? userEmail;
+  final String? userPicture;
 
+  const MyDrawer(
+      {Key? key,
+      required this.userName,
+      required this.userEmail,
+      required this.userPicture})
+      : super(key: key);
+
+  @override
+  State<MyDrawer> createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
   @override
   Widget build(BuildContext context) {
     AuthProvider authProvider = Provider.of<AuthProvider>(context);
+
     return Drawer(
       child: Column(
         children: [
-          const UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: colorBlue),
+          UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: colorBlue),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: colorWhite,
-                backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80'),
+                backgroundImage: NetworkImage(widget.userPicture!),
               ),
-              accountName: Text('Alex Johnson'),
-              accountEmail: Text('alex@gmail.com')),
+              accountName: Text(widget.userName!),
+              accountEmail: Text(widget.userEmail!)),
           ListView(
             shrinkWrap: true,
             padding: EdgeInsets.zero,

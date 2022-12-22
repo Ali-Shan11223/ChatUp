@@ -90,26 +90,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Get.to(() => const HomeScreen(),
                         transition: Transition.downToUp);
                   }),
-              // verticalSpace(20),
-              // SizedBox(
-              //   width: double.infinity,
-              //   child: OutlinedButton(
-              //       onPressed: () {
-              //         Get.to(() => const SignUpScreen(),
-              //             transition: Transition.downToUp);
-              //       },
-              //       style: OutlinedButton.styleFrom(
-              //           shape: const StadiumBorder(),
-              //           side: const BorderSide(width: 1.8, color: colorGrey),
-              //           padding: const EdgeInsets.all(16)),
-              //       child: const Text(
-              //         'Sign Up',
-              //         style: TextStyle(
-              //             color: colorBlue,
-              //             fontSize: 20,
-              //             fontWeight: FontWeight.bold),
-              //       )),
-              // )
             ],
           ),
         ),

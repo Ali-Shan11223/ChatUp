@@ -1,6 +1,5 @@
 import 'package:chat_up/consts/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeProvider {
   final FirebaseFirestore firebaseFirestore;
@@ -34,12 +33,5 @@ class HomeProvider {
           .limit(limit)
           .snapshots();
     }
-  }
-
-  void getUserData() async {
-    await firebaseFirestore
-        .collection(FirestoreConstants.userCollection)
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .get();
   }
 }
