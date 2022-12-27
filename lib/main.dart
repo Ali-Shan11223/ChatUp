@@ -1,4 +1,5 @@
 import 'package:chat_up/providers/auth_provider.dart';
+import 'package:chat_up/providers/chat_provider.dart';
 import 'package:chat_up/providers/home_provider.dart';
 import 'package:chat_up/providers/profile_provider.dart';
 import 'package:chat_up/screens/splash_screen.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
     ));
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
+        ChangeNotifierProvider<AuthProvider>(
             create: (_) => AuthProvider(
                 firebaseAuth: FirebaseAuth.instance,
                 googleSignIn: GoogleSignIn(),
@@ -52,7 +53,12 @@ class MyApp extends StatelessWidget {
             create: (_) => ProfileProvider(
                 prefs: prefs,
                 firebaseStorage: firebaseStorage,
-                firebaseFirestore: firebaseFirestore))
+                firebaseFirestore: firebaseFirestore)),
+        Provider<ChatProvider>(
+            create: (_) => ChatProvider(
+                prefs: prefs,
+                firebaseFirestore: firebaseFirestore,
+                firebaseStorage: firebaseStorage))
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

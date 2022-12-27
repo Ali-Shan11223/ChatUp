@@ -1,160 +1,377 @@
-// import 'package:audioplayers/audioplayers.dart';
-// import 'package:chat_bubbles/chat_bubbles.dart';
-// import 'package:chat_up/consts/consts.dart';
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
+import 'dart:io';
 
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({
-//     Key? key,
-//   }) : super(key: key);
+import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:chat_up/consts/consts.dart';
+import 'package:chat_up/consts/firestore_constants.dart';
+import 'package:chat_up/providers/auth_provider.dart';
+import 'package:chat_up/providers/chat_provider.dart';
+import 'package:chat_up/screens/login_screen.dart';
+import 'package:chat_up/widgets/loading_view.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
-//   @override
-//   _MyHomePageState createState() => _MyHomePageState();
-// }
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({Key? key, required this.arguments}) : super(key: key);
 
-// class _MyHomePageState extends State<MyHomePage> {
-//   AudioPlayer audioPlayer = AudioPlayer();
-//   Duration duration = const Duration();
-//   Duration position = const Duration();
-//   bool isPlaying = false;
-//   bool isLoading = false;
-//   bool isPause = false;
+  final ChatPageArguments arguments;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final now = DateTime.now();
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text(
-//           'Username',
-//           style: TextStyle(letterSpacing: 1, fontWeight: FontWeight.w600),
-//         ),
-//         centerTitle: true,
-//         leading: IconButton(
-//             onPressed: () {
-//               Get.back();
-//             },
-//             icon: const Icon(Icons.arrow_back_ios_rounded)),
-//       ),
-//       body: Stack(
-//         children: [
-//           SingleChildScrollView(
-//             child: Column(
-//               children: [
-//                 DateChip(
-//                   date: DateTime(now.year, now.month, now.day),
-//                 ),
-//                 const BubbleSpecialThree(
-//                   text: 'Where are you??',
-//                   color: colorBlue,
-//                   tail: false,
-//                   textStyle: TextStyle(color: Colors.white, fontSize: 16),
-//                   seen: true,
-//                 ),
-//                 const BubbleSpecialThree(
-//                   text: 'I am waiting..',
-//                   color: colorBlue,
-//                   tail: true,
-//                   textStyle: TextStyle(color: Colors.white, fontSize: 16),
-//                   seen: true,
-//                 ),
-//                 const BubbleSpecialThree(
-//                   text: 'Ohhh sorry, I am coming please wait..',
-//                   color: Color(0xFFE8E8EE),
-//                   tail: false,
-//                   isSender: false,
-//                 ),
-//                 const BubbleSpecialThree(
-//                   text: 'On my way',
-//                   color: Color(0xFFE8E8EE),
-//                   tail: true,
-//                   isSender: false,
-//                 ),
-//                 const SizedBox(
-//                   height: 100,
-//                 )
-//               ],
-//             ),
-//           ),
-//           MessageBar(
-//             onSend: (_) => print(_),
-//             actions: [
-//               InkWell(
-//                 child: const Icon(
-//                   Icons.add,
-//                   color: Colors.black,
-//                   size: 24,
-//                 ),
-//                 onTap: () {},
-//               ),
-//               Padding(
-//                 padding: const EdgeInsets.only(left: 8, right: 8),
-//                 child: InkWell(
-//                   child: const Icon(
-//                     Icons.camera_alt,
-//                     color: Colors.green,
-//                     size: 24,
-//                   ),
-//                   onTap: () {},
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//       // This trailing comma makes auto-formatting nicer for build methods.
-//     );
-//   }
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
 
-//   void _changeSeek(double value) {
-//     setState(() {
-//       audioPlayer.seek(Duration(seconds: value.toInt()));
-//     });
-//   }
+class _ChatScreenState extends State<ChatScreen> {
+  late String currentUserId;
+  List<DocumentSnapshot> listOfMessages = [];
+  int limit = 20;
+  int incrementLimit = 20;
+  String groupChatId = '';
 
-//   // void _playAudio() async {
-//   //   final url =
-//   //       'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3';
-//   //   if (isPause) {
-//   //     await audioPlayer.resume();
-//   //     setState(() {
-//   //       isPlaying = true;
-//   //       isPause = false;
-//   //     });
-//   //   } else if (isPlaying) {
-//   //     await audioPlayer.pause();
-//   //     setState(() {
-//   //       isPlaying = false;
-//   //       isPause = true;
-//   //     });
-//   //   } else {
-//   //     setState(() {
-//   //       isLoading = true;
-//   //     });
-//   //     await audioPlayer.play(url);
-//   //     setState(() {
-//   //       isPlaying = true;
-//   //     });
-//   //   }
+  File? imageFile;
+  String imageUrl = '';
+  bool isLoading = false;
+  bool isShowSticker = false;
 
-//   //   audioPlayer.onDurationChanged.listen((Duration d) {
-//   //     setState(() {
-//   //       duration = d;
-//   //       isLoading = false;
-//   //     });
-//   //   });
-//   //   audioPlayer.onAudioPositionChanged.listen((Duration p) {
-//   //     setState(() {
-//   //       position = p;
-//   //     });
-//   //   });
-//   //   audioPlayer.onPlayerCompletion.listen((event) {
-//   //     setState(() {
-//   //       isPlaying = false;
-//   //       duration = new Duration();
-//   //       position = new Duration();
-//   //     });
-//   //   });
-//   // }
-// }
+  final TextEditingController textEditingController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
+  final FocusNode focusNode = FocusNode();
+
+  late ChatProvider chatProvider;
+  late AuthProvider authProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    chatProvider = context.read<ChatProvider>();
+    authProvider = context.read<AuthProvider>();
+    focusNode.addListener(onFocusChange);
+    scrollController.addListener(scrollListener);
+    getLocalData();
+  }
+
+  void getLocalData() {
+    if (authProvider.getUserFirebaseId()?.isNotEmpty == true) {
+      currentUserId = authProvider.getUserFirebaseId()!;
+    } else {
+      Get.offUntil(
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (route) => false);
+    }
+    String peerId = widget.arguments.peerId;
+    if (currentUserId.compareTo(peerId) > 0) {
+      groupChatId = '$currentUserId-$peerId';
+    } else {
+      groupChatId = '$peerId-$currentUserId';
+    }
+    chatProvider.updateFirestoreData(FirestoreConstants.userCollection,
+        currentUserId, {FirestoreConstants.chattingWith: peerId});
+  }
+
+  void onFocusChange() {
+    if (focusNode.hasFocus) {
+      setState(() {
+        isShowSticker = false;
+      });
+    }
+  }
+
+  scrollListener() {
+    if (!scrollController.hasClients) return;
+    if (scrollController.offset >= scrollController.position.maxScrollExtent &&
+        !scrollController.position.outOfRange &&
+        limit <= listOfMessages.length) {
+      setState(() {
+        limit += incrementLimit;
+      });
+    }
+  }
+
+  //for receiving messages
+  bool isMessageSent(int index) {
+    if ((index > 0 &&
+            listOfMessages[index - 1].get(FirestoreConstants.idFrom) !=
+                currentUserId) ||
+        index == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // for sending messages
+  bool isMessageReceived(int index) {
+    if ((index > 0 &&
+            listOfMessages[index - 1].get(FirestoreConstants.idFrom) ==
+                currentUserId) ||
+        index == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void onSendMessage(String content, int type) {
+    if (content.trim().isNotEmpty) {
+      textEditingController.clear();
+      chatProvider.sendMessage(
+          content, type, groupChatId, currentUserId, widget.arguments.peerId);
+      if (scrollController.hasClients) {
+        scrollController.animateTo(0,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      }
+    } else {
+      Fluttertoast.showToast(
+          msg: 'Type a message',
+          backgroundColor: colorBlue,
+          gravity: ToastGravity.BOTTOM);
+    }
+  }
+
+  Future getImage(source) async {
+    ImagePicker imagePicker = ImagePicker();
+    XFile? pickedFile =
+        await imagePicker.pickImage(source: source).catchError((err) {
+      Fluttertoast.showToast(
+          msg: err.toString(),
+          backgroundColor: colorBlue,
+          textColor: colorWhite,
+          gravity: ToastGravity.BOTTOM);
+    });
+
+    if (pickedFile != null) {
+      imageFile = File(pickedFile.path);
+    }
+    if (imageFile != null) {
+      setState(() {
+        isLoading = true;
+      });
+      uploadFile();
+    }
+  }
+
+  Future uploadFile() async {
+    String fileName = DateTime.now().microsecondsSinceEpoch.toString();
+    UploadTask uploadTask = chatProvider.uploadFile(imageFile!, fileName);
+    try {
+      TaskSnapshot snapshot = await uploadTask;
+      imageUrl = await snapshot.ref.getDownloadURL();
+      setState(() {
+        isLoading = false;
+        onSendMessage(imageUrl, MessageType.image);
+      });
+    } on FirebaseException catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      Fluttertoast.showToast(
+          msg: e.message ?? e.toString(),
+          backgroundColor: colorBlue,
+          gravity: ToastGravity.BOTTOM);
+    }
+  }
+
+  Future<bool> onBackPress() {
+    if (isShowSticker) {
+      setState(() {
+        isShowSticker = false;
+      });
+    } else {
+      chatProvider.updateFirestoreData(FirestoreConstants.userCollection,
+          currentUserId, {FirestoreConstants.chattingWith: null});
+      Get.back();
+    }
+    return Future.value(false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.arguments.peerNickName,
+          style: const TextStyle(letterSpacing: 1, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+            onPressed: () {
+              Get.back();
+            },
+            icon: const Icon(Icons.arrow_back_ios_rounded)),
+      ),
+      body: WillPopScope(
+        onWillPop: onBackPress,
+        child: Stack(
+          children: [
+            Column(
+              children: [buildInput()],
+            ),
+            //buildLoading()
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildLoading() {
+    return Positioned(
+        child: isLoading ? const LoadingView() : const SizedBox.shrink());
+  }
+
+  Widget buildInput() {
+    return Align(
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        color: const Color(0xffF4F4F5),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            //button getting image from camera and gallery
+            InkWell(
+              onTap: () {
+                showDialog(
+                    barrierDismissible: false,
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Column(
+                          children: const [
+                            Center(
+                              child: Text('Send Media'),
+                            ),
+                            Divider(
+                              height: 1.5,
+                            )
+                          ],
+                        ),
+                        titlePadding:
+                            const EdgeInsets.only(left: 10, top: 10, right: 10),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(
+                                Icons.camera_alt_rounded,
+                                color: colorBlue,
+                              ),
+                              title: const Text('Take a picture'),
+                              onTap: () {
+                                getImage(ImageSource.camera);
+                                Get.back();
+                              },
+                            ),
+                            const Divider(
+                              height: 0,
+                            ),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.photo_size_select_actual_rounded,
+                                color: colorBlue,
+                              ),
+                              title: const Text('Choose image from gallery'),
+                              onTap: () {
+                                getImage(ImageSource.gallery);
+                                Get.back();
+                              },
+                            ),
+                            const Divider(
+                              height: 0,
+                            ),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.cancel_rounded,
+                                color: colorBlue,
+                              ),
+                              title: const Text('Cancel'),
+                              onTap: () {
+                                Get.back();
+                              },
+                            )
+                          ],
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      );
+                    });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: colorBlue,
+                  size: 24,
+                ),
+              ),
+            ),
+            //button for getting emojis
+            InkWell(
+              onTap: () {},
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: const Icon(
+                  Icons.face_rounded,
+                  color: colorBlue,
+                  size: 24,
+                ),
+              ),
+            ),
+
+            Flexible(
+                child: TextField(
+              controller: textEditingController,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 1,
+              maxLines: 3,
+              onSubmitted: (value) {
+                onSendMessage(textEditingController.text, MessageType.text);
+              },
+              decoration: InputDecoration(
+                hintText: 'Type your message here',
+                hintStyle: const TextStyle(fontSize: 16),
+                fillColor: colorWhite,
+                filled: true,
+                isDense: true,
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide:
+                        const BorderSide(color: Colors.black26, width: 0.2)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide:
+                        const BorderSide(color: colorWhite, width: 0.2)),
+              ),
+              focusNode: focusNode,
+            )),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 14),
+              child: InkWell(
+                onTap: () {
+                  onSendMessage(textEditingController.text, MessageType.text);
+                },
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: colorBlue,
+                  size: 24,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ChatPageArguments {
+  final String peerId;
+  final String peerNickName;
+
+  ChatPageArguments({required this.peerId, required this.peerNickName});
+}

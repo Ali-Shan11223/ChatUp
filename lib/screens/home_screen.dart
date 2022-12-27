@@ -5,6 +5,7 @@ import 'package:chat_up/consts/firestore_constants.dart';
 import 'package:chat_up/models/user_model.dart';
 import 'package:chat_up/providers/auth_provider.dart';
 import 'package:chat_up/providers/home_provider.dart';
+import 'package:chat_up/screens/chat_screen.dart';
 import 'package:chat_up/screens/login_screen.dart';
 import 'package:chat_up/utilities/debouncer.dart';
 
@@ -13,6 +14,7 @@ import 'package:chat_up/widgets/loading_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/my_drawer.dart';
@@ -250,7 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         return ListTile(
           onTap: () {
-            // Get.to(() => const MyHomePage());
+            Get.to(() => ChatScreen(
+                  arguments: ChatPageArguments(
+                      peerId: userModel.id, peerNickName: userModel.nickName),
+                ));
           },
           contentPadding: const EdgeInsets.only(bottom: 10),
           leading: CircleAvatar(
