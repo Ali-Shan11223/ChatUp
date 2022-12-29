@@ -138,6 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (snapshot.hasData) {
                                 if (snapshot.data!.docs.isNotEmpty) {
                                   return ListView.builder(
+                                    physics: const BouncingScrollPhysics(),
                                     itemCount: snapshot.data!.docs.length,
                                     itemBuilder: (context, index) => showUsers(
                                         context, snapshot.data!.docs[index]),
