@@ -59,7 +59,8 @@ class ChatProvider {
         type: type);
 
     FirebaseFirestore.instance.runTransaction((transaction) async {
-      transaction.set(reference, chatMessages.toJson());
+      transaction.set(
+          reference, chatMessages.toJson(), SetOptions(merge: false));
     });
   }
 }

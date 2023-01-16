@@ -36,13 +36,6 @@ class _IntroScreenState extends State<IntroScreen> {
         description: 'Communicate with your friends via private messages.',
         backgroundColor: const Color(0xff6279d9)));
     slides.add(Slide(
-        pathImage: 'assets/icons/group_chat.png',
-        widthImage: 300,
-        heightImage: 300,
-        title: 'GROUP CHATS',
-        description: 'Create group chats and stay in touch with your friends.',
-        backgroundColor: const Color(0xff6279d9)));
-    slides.add(Slide(
         pathImage: 'assets/icons/send_photos.png',
         widthImage: 300,
         heightImage: 300,

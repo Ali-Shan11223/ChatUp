@@ -9,13 +9,15 @@ class UserModel {
   String nickName;
   String? emailAddress;
   String aboutMe;
+  String pushToken;
 
   UserModel(
       {required this.id,
       required this.photoUrl,
       required this.nickName,
       this.emailAddress,
-      required this.aboutMe});
+      required this.aboutMe,
+      required this.pushToken});
 
   Map<String, String> toJson() {
     return {
@@ -30,6 +32,7 @@ class UserModel {
     String aboutMe = '';
     String photoUrl = '';
     String emailAddress = '';
+    String pushToken = '';
     try {
       nickName = doc.get(FirestoreConstants.nickName);
     } catch (e) {}
@@ -42,11 +45,15 @@ class UserModel {
     try {
       photoUrl = doc.get(FirestoreConstants.photoUrl);
     } catch (e) {}
+    try {
+      pushToken = doc.get(FirestoreConstants.pushToken);
+    } catch (e) {}
     return UserModel(
         id: doc.id,
         photoUrl: photoUrl,
         nickName: nickName,
         aboutMe: aboutMe,
-        emailAddress: emailAddress);
+        emailAddress: emailAddress,
+        pushToken: pushToken);
   }
 }

@@ -11,16 +11,9 @@ import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
 
 class MyDrawer extends StatefulWidget {
-  final String? userName;
-  final String? userEmail;
-  final String? userPicture;
-
-  const MyDrawer(
-      {Key? key,
-      required this.userName,
-      required this.userEmail,
-      required this.userPicture})
-      : super(key: key);
+  const MyDrawer({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<MyDrawer> createState() => _MyDrawerState();
@@ -34,14 +27,12 @@ class _MyDrawerState extends State<MyDrawer> {
     return Drawer(
       child: Column(
         children: [
-          UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: colorBlue),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: colorWhite,
-                backgroundImage: NetworkImage(widget.userPicture!),
-              ),
-              accountName: Text(widget.userName!),
-              accountEmail: Text(widget.userEmail!)),
+          Image.asset(
+            'assets/icons/logo.png',
+            height: 150,
+            width: 150,
+            fit: BoxFit.cover,
+          ),
           ListView(
             shrinkWrap: true,
             padding: EdgeInsets.zero,

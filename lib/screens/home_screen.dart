@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:chat_up/consts/consts.dart';
 import 'package:chat_up/consts/firestore_constants.dart';
 import 'package:chat_up/models/user_model.dart';
@@ -42,27 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
   final searchController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
-  String? name;
-  String? picture;
-  String? email;
-
-  Future getData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    var getDocuments = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user!.uid)
-        .get();
-    setState(() {
-      name = getDocuments.data()!['nickname'];
-      email = getDocuments.data()!['emailaddress'];
-      picture = getDocuments.data()!['photourl'];
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
+
+    //getData();
     authProvider = context.read<AuthProvider>();
     homeProvider = context.read<HomeProvider>();
 
@@ -74,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
           (route) => false);
     }
+    scrollController.addListener(scrollListener);
   }
 
   @override
@@ -111,11 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //   icon: const Icon(Icons.message_rounded),
         //   backgroundColor: colorBlue,
         // ),
-        drawer: MyDrawer(
-          userName: name,
-          userEmail: email,
-          userPicture: picture,
-        ),
+        drawer: MyDrawer(),
         body: SizedBox(
           height: double.infinity,
           width: double.infinity,
@@ -260,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           contentPadding: const EdgeInsets.only(bottom: 10),
           leading: CircleAvatar(
-            radius: 30,
+            radius: 25,
             backgroundColor: colorBlue,
             child: userModel.photoUrl.isNotEmpty
                 ? ClipRRect(

@@ -14,10 +14,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-void main() async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('Handling on background message ${message.notification!.toString()}');
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await FirebaseMessaging.instance.getInitialMessage();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(MyApp(
     prefs: prefs,

@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
-import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:chat_up/consts/consts.dart';
 import 'package:chat_up/consts/firestore_constants.dart';
+import 'package:chat_up/helper/time_helper.dart';
 import 'package:chat_up/models/message_model.dart';
 import 'package:chat_up/providers/auth_provider.dart';
 import 'package:chat_up/providers/chat_provider.dart';
@@ -11,13 +12,17 @@ import 'package:chat_up/screens/image_preview.dart';
 import 'package:chat_up/screens/login_screen.dart';
 import 'package:chat_up/widgets/loading_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
+import '../models/user_model.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key, required this.arguments}) : super(key: key);
@@ -29,6 +34,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   late String currentUserId;
   List<DocumentSnapshot> listOfMessages = [];
   int limit = 20;
@@ -47,11 +54,109 @@ class _ChatScreenState extends State<ChatScreen> {
   late ChatProvider chatProvider;
   late AuthProvider authProvider;
 
+  // void requestPermission() async {
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //   NotificationSettings settings = await messaging.requestPermission();
+
+  //   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+  //     print('User Granted Permission');
+  //   } else if (settings.authorizationStatus ==
+  //       AuthorizationStatus.provisional) {
+  //     print('User Granted Provisional Permission');
+  //   } else {
+  //     print('User Declined or Has Not Accepted Permission');
+  //   }
+  // }
+
+  // void getToken() async {
+  //   await FirebaseMessaging.instance.getToken().then((token) {
+  //     print('Push Token: $token');
+  //     if (token != null) {
+  //       FirebaseFirestore.instance
+  //           .collection(FirestoreConstants.userCollection)
+  //           .doc(currentUserId)
+  //           .set({'pushToken': token});
+  //     }
+  //   });
+  // }
+
+  // initInfo() {
+  //   var androidInitialize =
+  //       const AndroidInitializationSettings('@mipmap/ic_launcher');
+  //   var initializationSettings =
+  //       InitializationSettings(android: androidInitialize);
+  //   flutterLocalNotificationsPlugin.initialize(initializationSettings,
+  //       onDidReceiveNotificationResponse:
+  //           (NotificationResponse? payLoad) async {
+  //     try {
+  //       if (payLoad != null) {
+  //       } else {}
+  //     } catch (e) {}
+  //     return;
+  //   });
+
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+  //     print('................onMessage..............');
+  //     print(
+  //         'onMessage: ${message.notification?.title}/${message.notification?.body}');
+
+  //     BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+  //         message.notification!.body.toString(),
+  //         htmlFormatBigText: true,
+  //         contentTitle: message.notification!.title,
+  //         htmlFormatContentTitle: true);
+
+  //     AndroidNotificationDetails androidNotificationDetails =
+  //         const AndroidNotificationDetails('chatup', 'chatup',
+  //             priority: Priority.high,
+  //             importance: Importance.high,
+  //             playSound: true);
+  //     NotificationDetails notificationDetails =
+  //         NotificationDetails(android: androidNotificationDetails);
+  //     await flutterLocalNotificationsPlugin.show(0, message.notification?.title,
+  //         message.notification?.body, notificationDetails,
+  //         payload: message.data['body']);
+  //   });
+  // }
+
+  // void sendPushNotification(
+  //     ChatMessages chatMessages, UserModel userModel) async {
+  //   try {
+  //     await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
+  //         headers: <String, String>{
+  //           'Content-Type': 'application/json',
+  //           'Authorization':
+  //               'key=AAAAMmN92cM:APA91bGmTg7zrrQ_78Sgdo6ooLXVmwArEFDuBiuvBvJeUxsHUd6Z8xCJWRv4x9w18lNMDEO_p5At3BYxhVh_CmV1ZuyBEQE6rZXavY8efi7Lw6JOiLtaYC5LKrGNrOFCs6-GTkz6I3Xn'
+  //         },
+  //         body: jsonEncode(<String, dynamic>{
+  //           'priority': 'high',
+  //           'data': <String, dynamic>{
+  //             'click-action': 'FLUTTER_NOTIFICATION_CLICK',
+  //             'status': 'done',
+  //             'body': chatMessages.content,
+  //             'title': userModel.nickName
+  //           },
+  //           'notification': <String, dynamic>{
+  //             'title': userModel.nickName,
+  //             'body': chatMessages.content,
+  //             'android_channel_id': 'chatup'
+  //           },
+  //           'to': userModel.pushToken
+  //         }));
+  //   } catch (e) {
+  //     print(e.toString());
+  //   }
+  // }
+
   @override
   void initState() {
     super.initState();
+
     chatProvider = context.read<ChatProvider>();
     authProvider = context.read<AuthProvider>();
+    // requestPermission();
+    // getToken();
+    // initInfo();
     focusNode.addListener(onFocusChange);
     scrollController.addListener(scrollListener);
     getLocalData();
@@ -197,7 +302,15 @@ class _ChatScreenState extends State<ChatScreen> {
       if (chatMessages.idFrom == currentUserId) {
         //Right my messages
         return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: Text(
+                TimeHelper.getFormattedTime(context, chatMessages.timeStamp),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ),
             chatMessages.type == MessageType.text
                 ? Container(
                     child: Text(
@@ -248,7 +361,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       )
                     : Container()
           ],
-          mainAxisAlignment: MainAxisAlignment.end,
         );
       } else {
         //peer messages
@@ -257,6 +369,7 @@ class _ChatScreenState extends State<ChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   chatMessages.type == MessageType.text
                       ? Container(
@@ -305,22 +418,17 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               margin: const EdgeInsets.only(left: 10),
                             )
-                          : Container()
+                          : Container(),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 15),
+                    child: Text(
+                      TimeHelper.getFormattedTime(
+                          context, chatMessages.timeStamp),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ),
                 ],
               ),
-              isMessageReceived(index)
-                  ? Container(
-                      child: Text(
-                        DateFormat('dd MMM kk:mm').format(
-                            DateTime.fromMicrosecondsSinceEpoch(
-                                int.parse(chatMessages.timeStamp))),
-                        style: const TextStyle(
-                            color: Colors.black45, fontSize: 12),
-                      ),
-                      margin:
-                          const EdgeInsets.only(left: 10, bottom: 5, top: 5),
-                    )
-                  : const SizedBox.shrink()
             ],
           ),
           margin: const EdgeInsets.only(bottom: 10),
@@ -333,7 +441,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -352,13 +459,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Stack(
           children: [
             Column(
-              children: [
-                DateChip(
-                  date: DateTime(now.year, now.month, now.day),
-                ),
-                messagesList(),
-                userInput()
-              ],
+              children: [messagesList(), userInput()],
             ),
             showLoading()
           ],
@@ -543,8 +644,15 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {
+                  onTap: () async {
                     onSendMessage(textEditingController.text, MessageType.text);
+                    // DocumentSnapshot snapshot = await FirebaseFirestore.instance
+                    //     .collection(FirestoreConstants.userCollection)
+                    //     .doc(currentUserId)
+                    //     .get();
+                    // String token = snapshot['pushToken'];
+                    // print('PushToken: ${token}');
+                    // sendPushNotification(chatMessages!, userModel!);
                   },
                   child: const Icon(
                     Icons.send_rounded,

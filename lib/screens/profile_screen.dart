@@ -30,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String aboutMe = '';
   String photoUrl = '';
   String emailAddress = '';
+  String pushToken = '';
 
   bool isLoading = false;
   File? avatarProfile;
@@ -43,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       photoUrl = profileProvider.getPref(FirestoreConstants.photoUrl) ?? '';
       emailAddress =
           profileProvider.getPref(FirestoreConstants.emailAddress) ?? '';
+      pushToken = profileProvider.getPref(FirestoreConstants.pushToken) ?? '';
     });
 
     nickNameController = TextEditingController(text: nickName);
@@ -91,7 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           photoUrl: photoUrl,
           nickName: nickName,
           emailAddress: emailAddress,
-          aboutMe: aboutMe);
+          aboutMe: aboutMe,
+          pushToken: pushToken);
       profileProvider
           .updateFirestoreData(
               FirestoreConstants.userCollection, id, updateUser.toJson())
@@ -134,7 +137,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     UserModel updateUser = UserModel(
-        id: id, photoUrl: photoUrl, nickName: nickName, aboutMe: aboutMe);
+        id: id,
+        photoUrl: photoUrl,
+        nickName: nickName,
+        aboutMe: aboutMe,
+        pushToken: pushToken);
     profileProvider
         .updateFirestoreData(
             FirestoreConstants.userCollection, id, updateUser.toJson())

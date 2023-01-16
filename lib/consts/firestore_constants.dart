@@ -12,4 +12,5 @@ class FirestoreConstants {
   static const timeStamp = 'timestamp';
   static const content = 'content';
   static const type = 'type';
+  static const pushToken = 'pushToken';
 }
