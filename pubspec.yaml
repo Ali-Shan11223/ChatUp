@@ -36,6 +36,10 @@ dependencies:
   firebase_messaging:
   http: ^0.13.5
   flutter_notification_channel: ^2.0.0
+  emoji_picker_flutter:
+  zego_uikit_prebuilt_call: ^1.4.2
+  zego_uikit_signaling_plugin:
+  
 
 
 dev_dependencies:
@@ -43,6 +47,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_launcher_icons: "^0.11.0"
+  flutter_lints: ^2.0.1
 
 flutter_icons:
   android: "ic_launcher"

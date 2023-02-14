@@ -1,4 +1,6 @@
-import 'dart:convert';
+
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:io';
 import 'dart:async';
 
@@ -12,17 +14,16 @@ import 'package:chat_up/screens/image_preview.dart';
 import 'package:chat_up/screens/login_screen.dart';
 import 'package:chat_up/widgets/loading_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
-import '../models/user_model.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key, required this.arguments}) : super(key: key);
@@ -32,6 +33,8 @@ class ChatScreen extends StatefulWidget {
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
+
+final userId = math.Random().nextInt(10000).toString();
 
 class _ChatScreenState extends State<ChatScreen> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -296,6 +299,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return Future.value(false);
   }
 
+  final callController = TextEditingController();
+
   Widget messageItem(int index, DocumentSnapshot? document) {
     if (document != null) {
       ChatMessages chatMessages = ChatMessages.fromDocument(document);
@@ -313,12 +318,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             chatMessages.type == MessageType.text
                 ? Container(
-                    child: Text(
-                      chatMessages.content,
-                      style: const TextStyle(
-                        color: colorWhite,
-                      ),
-                    ),
                     decoration: const BoxDecoration(
                         color: senderColor,
                         borderRadius: BorderRadius.only(
@@ -328,27 +327,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     padding: const EdgeInsets.fromLTRB(15, 10, 15, 15),
                     margin: EdgeInsets.only(
                         bottom: isMessageSent(index) ? 20 : 10, right: 10),
+                    child: Text(
+                      chatMessages.content,
+                      style: const TextStyle(
+                        color: colorWhite,
+                      ),
+                    ),
                   )
                 : chatMessages.type == MessageType.image
                     ? Container(
-                        child: GestureDetector(
-                          onTap: () {
-                            Get.to(ImagePreview(image: chatMessages.content));
-                          },
-                          child: Material(
-                            child: Image.network(
-                              chatMessages.content,
-                              width: 200,
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                bottomLeft: Radius.circular(20),
-                                bottomRight: Radius.circular(20)),
-                            clipBehavior: Clip.hardEdge,
-                          ),
-                        ),
                         decoration: const BoxDecoration(
                           color: senderColor,
                           borderRadius: BorderRadius.only(
@@ -358,6 +345,24 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         margin: EdgeInsets.only(
                             bottom: isMessageSent(index) ? 20 : 10, right: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.to(ImagePreview(image: chatMessages.content));
+                          },
+                          child: Material(
+                            borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(20),
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20)),
+                            clipBehavior: Clip.hardEdge,
+                            child: Image.network(
+                              chatMessages.content,
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                       )
                     : Container()
           ],
@@ -365,6 +370,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         //peer messages
         return Container(
+          margin: const EdgeInsets.only(bottom: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -373,12 +379,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   chatMessages.type == MessageType.text
                       ? Container(
-                          child: Text(
-                            chatMessages.content,
-                            style: const TextStyle(
-                              color: colorBlack,
-                            ),
-                          ),
                           decoration: const BoxDecoration(
                               color: receiverColor,
                               borderRadius: BorderRadius.only(
@@ -387,28 +387,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                   bottomRight: Radius.circular(20))),
                           padding: const EdgeInsets.fromLTRB(15, 10, 15, 10),
                           margin: const EdgeInsets.only(left: 10),
+                          child: Text(
+                            chatMessages.content,
+                            style: const TextStyle(
+                              color: colorBlack,
+                            ),
+                          ),
                         )
                       : chatMessages.type == MessageType.image
                           ? Container(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Get.to(ImagePreview(
-                                      image: chatMessages.content));
-                                },
-                                child: Material(
-                                  child: Image.network(
-                                    chatMessages.content,
-                                    width: 200,
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                  ),
-                                  borderRadius: const BorderRadius.only(
-                                      topRight: Radius.circular(20),
-                                      bottomLeft: Radius.circular(20),
-                                      bottomRight: Radius.circular(20)),
-                                  clipBehavior: Clip.hardEdge,
-                                ),
-                              ),
                               decoration: const BoxDecoration(
                                 color: receiverColor,
                                 borderRadius: BorderRadius.only(
@@ -417,6 +404,25 @@ class _ChatScreenState extends State<ChatScreen> {
                                     bottomRight: Radius.circular(20)),
                               ),
                               margin: const EdgeInsets.only(left: 10),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Get.to(ImagePreview(
+                                      image: chatMessages.content));
+                                },
+                                child: Material(
+                                  borderRadius: const BorderRadius.only(
+                                      topRight: Radius.circular(20),
+                                      bottomLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(20)),
+                                  clipBehavior: Clip.hardEdge,
+                                  child: Image.network(
+                                    chatMessages.content,
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
                             )
                           : Container(),
                   Padding(
@@ -431,7 +437,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
           ),
-          margin: const EdgeInsets.only(bottom: 10),
         );
       }
     } else {
@@ -453,6 +458,56 @@ class _ChatScreenState extends State<ChatScreen> {
               Get.back();
             },
             icon: const Icon(Icons.arrow_back_ios_rounded)),
+        actions: [
+          IconButton(
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Center(child: Text('Add Call ID')),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      content: TextFormField(
+                        keyboardType: TextInputType.number,
+                        controller: callController,
+                        decoration: const InputDecoration(
+                            isDense: true,
+                            hintText: 'Enter Calling ID',
+                            border: OutlineInputBorder()),
+                      ),
+                      actions: [
+                        MaterialButton(
+                          onPressed: () {
+                            Get.back();
+                          },
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: colorBlue, fontSize: 16),
+                          ),
+                        ),
+                        MaterialButton(
+                          onPressed: () {
+                            Get.back();
+                            Get.to(() => AudioCallingScreen(
+                                callId: callController.text.toString()));
+                          },
+                          child: const Text(
+                            'Call',
+                            style: TextStyle(color: colorBlue, fontSize: 16),
+                          ),
+                        )
+                      ],
+                      contentPadding: const EdgeInsets.only(
+                          left: 20, right: 20, top: 10, bottom: 10),
+                    );
+                  });
+              //Get.to(() => CallScreen());
+            },
+            icon: const Icon(Icons.call),
+            tooltip: 'Call',
+          ),
+        ],
       ),
       body: WillPopScope(
         onWillPop: onBackPress,
@@ -646,13 +701,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: InkWell(
                   onTap: () async {
                     onSendMessage(textEditingController.text, MessageType.text);
-                    // DocumentSnapshot snapshot = await FirebaseFirestore.instance
-                    //     .collection(FirestoreConstants.userCollection)
-                    //     .doc(currentUserId)
-                    //     .get();
-                    // String token = snapshot['pushToken'];
-                    // print('PushToken: ${token}');
-                    // sendPushNotification(chatMessages!, userModel!);
                   },
                   child: const Icon(
                     Icons.send_rounded,
@@ -666,6 +714,27 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+}
+
+class AudioCallingScreen extends StatelessWidget {
+  final String callId;
+  const AudioCallingScreen({Key? key, required this.callId}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: ZegoUIKitPrebuiltCall(
+            appID: 757048881,
+            appSign:
+                'a57c74f6038724a5a7c6fcf79f701744b99cad76706e7db3d471ee7be80fe5c1',
+            callID: callId,
+            userID: userId,
+            userName: userId,
+            config: ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall()
+              ..onOnlySelfInRoom = (context) {
+                Navigator.pop(context);
+              }));
   }
 }
 

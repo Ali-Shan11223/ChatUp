@@ -11,7 +11,6 @@ import 'package:chat_up/utilities/debouncer.dart';
 import 'package:chat_up/widgets/exit_popup.dart';
 import 'package:chat_up/widgets/loading_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -95,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //   icon: const Icon(Icons.message_rounded),
         //   backgroundColor: colorBlue,
         // ),
-        drawer: MyDrawer(),
+        drawer: const MyDrawer(),
         body: SizedBox(
           height: double.infinity,
           width: double.infinity,
@@ -154,6 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget searchBar() {
     return Container(
       height: 50,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30), color: Colors.grey.shade200),
       child: Row(
         children: [
           horizontalSpace(15),
@@ -220,8 +221,6 @@ class _HomeScreenState extends State<HomeScreen> {
           horizontalSpace(15)
         ],
       ),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30), color: Colors.grey.shade200),
     );
   }
 
@@ -245,13 +244,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: userModel.photoUrl.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(100),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
                     child: Image.network(
                       userModel.photoUrl,
                       width: 120,
                       height: 120,
                       fit: BoxFit.cover,
                     ),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
                   )
                 : const Icon(
                     Icons.account_circle_rounded,

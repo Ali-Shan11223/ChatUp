@@ -54,7 +54,7 @@ class ChatProvider {
     ChatMessages chatMessages = ChatMessages(
         idFrom: currentUserId,
         idTo: peerId,
-        timeStamp: DateTime.now().microsecondsSinceEpoch.toString(),
+        timeStamp: DateTime.now().millisecondsSinceEpoch.toString(),
         content: content,
         type: type);
 
